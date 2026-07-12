@@ -1,7 +1,16 @@
 {
   "name": "somendratradingjournal-claud",
+  "main": "src/worker.js",
   "compatibility_date": "2026-07-12",
   "assets": {
-    "directory": "./dist"
-  }
+    "directory": "./dist",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "trading-journal-db",
+      "database_id": "61452be3-77fb-4bb9-9e27-b70061a60c24"
+    }
+  ]
 }
