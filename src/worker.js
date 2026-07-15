@@ -27,6 +27,7 @@ function rowToTrade(row) {
 async function handleApi(request, env, url) {
   const { pathname } = url;
   const method = request.method;
+  const singleTradeMatch = pathname.match(/^\/api\/trades\/(\d+)$/);
 
   try {
     if (pathname === "/api/trades" && method === "GET") {
@@ -72,6 +73,45 @@ async function handleApi(request, env, url) {
       await env.DB.prepare(
         "INSERT INTO settings (key, value) VALUES ('starting_balance', '0') ON CONFLICT(key) DO UPDATE SET value = '0'"
       ).run();
+      return json({ ok: true });
+    }
+
+    if (singleTradeMatch && method === "PUT") {
+      const id = Number(singleTradeMatch[1]);
+      const t = await request.json();
+      if (!t.ticker || !t.dir || !t.date || !t.status) {
+        return json({ error: "Missing required trade fields" }, { status: 400 });
+      }
+      await env.DB.prepare(
+        `UPDATE trades SET ticker = ?, cls = ?, dir = ?, entry = ?, exit = ?, size = ?, rr = ?, date = ?, setup = ?, notes = ?, pnl = ?, status = ?, roi = ?
+         WHERE id = ?`
+      )
+        .bind(
+          t.ticker,
+          t.cls ?? null,
+          t.dir,
+          t.entry ?? null,
+          t.exit ?? null,
+          t.size ?? null,
+          t.rr ?? null,
+          t.date,
+          t.setup ?? null,
+          t.notes ?? null,
+          t.pnl ?? null,
+          t.status,
+          t.roi ?? null,
+          id
+        )
+        .run();
+
+      const row = await env.DB.prepare("SELECT * FROM trades WHERE id = ?").bind(id).first();
+      if (!row) return json({ error: "Trade not found" }, { status: 404 });
+      return json(rowToTrade(row));
+    }
+
+    if (singleTradeMatch && method === "DELETE") {
+      const id = Number(singleTradeMatch[1]);
+      await env.DB.prepare("DELETE FROM trades WHERE id = ?").bind(id).run();
       return json({ ok: true });
     }
 
