@@ -12,5 +12,8 @@
       "database_name": "trading-journal-db",
       "database_id": "61452be3-77fb-4bb9-9e27-b70061a60c24"
     }
-  ]
+  ],
+  "triggers": {
+    "crons": ["*/15 * * * *"]
+  }
 }
